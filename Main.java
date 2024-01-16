@@ -1,5 +1,7 @@
 // Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
 // then press Enter. You can now see whitespace characters in your code.
+import jdk.nashorn.internal.ir.WhileNode;
+
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Scanner;
@@ -12,9 +14,11 @@ public class Main {
     static String[] romanDecimal ={"X","XX","XXX","XL","L","LX","LXX","LXXX","XC","C"};
     static String[] roman ={"I","II","III","IV","V","VI","VII","VIII","IX","X"};
     static boolean Rom = false;
+    static boolean num = false;
+    static boolean error = false;
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception{
 
         RomanDec.addAll(Arrays.asList(romanDecimal));
         Roman.addAll(Arrays.asList(roman));
@@ -29,8 +33,23 @@ public class Main {
         input.trim();
         String [] data = input.split(" ");
 
-        if(checkRoman(data)){
-            Rom= true;
+        for (int i=0;i<data.length;i++){
+           if(checkRoman(data[i])){
+               Rom = true;
+           }
+           if(checknumber(data[i])){
+               num =true;
+           }
+            i++;
+            if (Rom & num){
+                error = true;
+                throw new Exception("используются одновременно разные системы счисления");
+            }
+        }
+
+
+
+        if(Rom){
             int k = 0;
             for (String s:data
                  ) {
@@ -39,30 +58,42 @@ public class Main {
             }
         }
 
+
+
+
+        if(cheсkdata(data)){
+            error = true;
+            throw new Exception("строка не является математической операцией");
+
+        }
+
+
         if(datatooshort(data)){
-            System.out.println("строка не является математической операцией");
-            System.exit(1);
+            error = true;
+            throw new Exception("строка не является математической операцией");
         }
 
        try{
-           if (cheсknumber(data)){
-               System.out.println("число > 10");
-               System.exit(1);
+           if (cheсklimit(data)){
+               error = true;
+               throw new Exception("число > 10");
+
            }
        } catch (Exception e) {
-           System.out.println("число > 10 либо не является  ни числом и ни римским числом ");
+           throw new Exception("число > 10 либо не является  ни числом и ни римским числом ");
+
+       }
+
+        if(!checkdatalength(data)){
+            error = true;
+            throw new Exception("формат математической операции не удовлетворяет заданию - два операнда и один оператор (+, -, /, *)");
+        }
+       if ( error){
            System.exit(1);
        }
 
 
         ArrayList<String> dataList = new ArrayList<>(Arrays.asList(data));
-
-        if(!checkdatalength(data)){
-            System.out.println("формат математической операции не удовлетворяет заданию - два операнда и один оператор (+, -, /, *)");
-            System.exit(1);
-        }
-
-
 
         operation(dataList);
 
@@ -73,18 +104,18 @@ public class Main {
 
             System.out.println("в римской системе: ");
             if(Objects.equals(dataList.get(0), "0")){
-                System.out.println("нет Нулевого числа");
-                System.exit(1);
+                throw new Exception("нет Нулевого числа");
             }
             if(Integer.parseInt(dataList.get(0))<0){
-                System.out.println(" нет отрицательных чисел");
-                System.exit(1);
+                throw new Exception(" нет отрицательных чисел");
+
             }
             String s=romanOf(Integer.parseInt(dataList.get(0)));
             dataList.remove(0);
             dataList.add(0,s);
 
             dataList.forEach(System.out::println);
+            System.exit(1);
 
         }
         System.exit(1);
@@ -103,7 +134,7 @@ public class Main {
     static int mult(int a, int b){
         return a*b;
     }
-    static boolean cheсknumber(String[] DATA){
+    static boolean cheсklimit(String[] DATA){
         boolean b = false;
         for (int i = 0;i<= DATA.length;i++){
             if(Integer.parseInt(DATA[i])>10) {
@@ -111,6 +142,40 @@ public class Main {
                 }
             i++;
             }
+        return b;
+    }
+
+    static  boolean checknumber(String number){
+        boolean b = false;
+        int j =0;
+        for (int i = 0;i<=10;i++){
+                try{
+                    int k = Integer.parseInt(number)-i;
+                    if(Objects.equals(k , 0)){
+                        b = true;
+                    }
+                } catch (Exception e) {
+                    b = false;
+                }
+
+        }
+        return b;
+    }
+    static boolean cheсkdata(String[] DATA){
+        boolean b = true;
+        for (int i = 1;i<= DATA.length-1;i++){
+            switch (DATA[i]){
+                case "+": b = false;
+                break;
+                case "-": b = false;
+                break;
+                case "/": b = false;
+                break;
+                case "*": b = false;
+                break;
+            }
+            i++;
+        }
         return b;
     }
     static void  operation(ArrayList<String> List){
@@ -188,13 +253,16 @@ public class Main {
         }
         return i;
     }
-    static boolean checkRoman(String[] s){
+    static boolean checkRoman(String s){
         boolean b=false;
         for (String string : roman) {
-            if (Objects.equals(s[0], string)) {
-                b = true;
-                break;
-            }
+
+                if (Objects.equals(s, string)) {
+                    b = true;
+                    break;
+                }
+
+
         }
         return b;
     }
